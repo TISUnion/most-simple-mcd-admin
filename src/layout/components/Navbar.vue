@@ -35,10 +35,14 @@ export default {
     Breadcrumb,
     Hamburger
   },
+  data() {
+    return {
+      avatar: ''
+    }
+  },
   computed: {
     ...mapGetters([
-      'sidebar',
-      'avatar'
+      'sidebar'
     ])
   },
   methods: {
