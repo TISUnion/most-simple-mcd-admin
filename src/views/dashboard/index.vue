@@ -6,13 +6,13 @@
 
 <script>
 export default {
-  name: "Dashboard",
+  name: 'Dashboard',
   data() {
     return {
       nickname: this.$store.state.user.nickname
-    };
+    }
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>
