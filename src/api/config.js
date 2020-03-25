@@ -1,9 +1,17 @@
 import request from '@/utils/request'
 
-export function getList(params) {
+export function getList(data) {
   return request({
     url: '/api/v1/config/list',
-    method: 'get',
-    params
+    method: 'GET',
+    data
+  })
+}
+
+export function updateConfig(data) {
+  return request({
+    url: '/api/v1/config',
+    method: 'POST',
+    data
   })
 }

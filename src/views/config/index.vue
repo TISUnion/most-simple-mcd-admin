@@ -27,7 +27,19 @@
 
       <el-table-column align="center" label="配置说明" width="500">
         <template slot-scope="{row}">
-          <span>{{ row.description }}</span>
+          <template v-if="row.edit">
+            <el-input v-model="row.description" class="edit-input" size="small" />
+            <el-button
+              class="cancel-btn"
+              size="small"
+              icon="el-icon-refresh"
+              type="warning"
+              @click="cancelEdit(row)"
+            >
+              cancel
+            </el-button>
+          </template>
+          <span v-else>{{ row.description }}</span>
         </template>
       </el-table-column>
 
@@ -65,7 +77,7 @@
 </template>
 
 <script>
-import { getList } from '@/api/config'
+import { getList, updateConfig } from '@/api/config'
 export default {
   name: 'Config',
   data() {
@@ -85,9 +97,9 @@ export default {
     async getList() {
       getList().then(response => {
         const items = response.data
-        console.log(items)
         this.list = items.map(v => {
           v.origin_config_val = v.config_val
+          v.origin_description = v.description
           this.$set(v, 'edit', false)
           return v
         })
@@ -97,16 +109,34 @@ export default {
     cancelEdit(row) {
       row.edit = false
       row.config_val = row.origin_config_val
+      row.description = row.origin_description
       this.$message({
-        message: 'The title has been restored to the original value',
+        message: '配置值已初始为原始值',
         type: 'warning'
       })
     },
     confirmEdit(row) {
       row.edit = false
-      this.$message({
-        message: 'The title has been edited',
-        type: 'success'
+      if (row.origin_config_val === row.config_val && row.origin_description === row.description) {
+        this.$message({
+          message: '配置值未发生变更',
+          type: 'warning'
+        })
+        return
+      }
+      row.origin_config_val = row.config_val
+      row.origin_description = row.description
+      const params = [{
+        config_key: row.config_key,
+        config_val: row.config_val,
+        description: row.description
+      }]
+      updateConfig(params).then(() => {
+        row.level = 4
+        this.$message({
+          message: '配置值编辑成功',
+          type: 'success'
+        })
       })
     }
   }
