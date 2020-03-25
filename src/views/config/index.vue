@@ -95,7 +95,7 @@ export default {
   },
   methods: {
     async getList() {
-      getList().then(response => {
+      await getList().then(response => {
         const items = response.data
         this.list = items.map(v => {
           v.origin_config_val = v.config_val

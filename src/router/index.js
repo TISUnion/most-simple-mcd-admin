@@ -57,6 +57,11 @@ export const constantRoutes = [
       name: '配置管理',
       component: () => import('@/views/config/index'),
       meta: { title: '配置管理', icon: 'tree' }
+    }, {
+      path: 'server',
+      name: '服务端管理',
+      component: () => import('@/views/server/index'),
+      meta: { title: '服务端管理', icon: 'table' }
     }]
   },
 
