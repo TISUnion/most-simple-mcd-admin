@@ -36,68 +36,75 @@
       border
       fit
       highlight-current-row
-      @sort-change="sortChange"
     >
-      <el-table-column v-if="showId" align="center" label="id" width="120">
+      <el-table-column v-if="showId" align="center" label="id">
         <template slot-scope="{row}">
           <span>{{ row.id | ellipsis }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="名称" width="150">
+      <el-table-column v-if="showName" align="center" label="名称">
         <template slot-scope="{row}">
           <span>{{ row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="端口" width="150">
+      <el-table-column v-if="showPort" align="center" label="端口">
         <template slot-scope="{row}">
           <span>{{ row.port }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="运行工作路径" width="150">
+      <el-table-column v-if="showRunPath" align="center" label="运行工作路径">
         <template slot-scope="{row}">
           <span>{{ row.run_rath | ellipsis }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="是否是镜像服务器" width="150">
+      <el-table-column v-if="showIsMirror" align="center" label="是否是镜像服务器" width="150">
         <template slot-scope="{row}">
           <span>{{ row.is_mirror }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="使用内存大小" width="160">
+      <el-table-column v-if="showMemory" align="center" label="使用内存大小">
         <template slot-scope="{row}">
           <span>{{ row.memory }}M</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="服务端版本" width="150">
+      <el-table-column v-if="showVersion" align="center" label="服务端版本">
         <template slot-scope="{row}">
           <span>{{ row.version }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="游戏模式" width="150">
+      <el-table-column v-if="showModel" align="center" label="游戏模式">
         <template slot-scope="{row}">
           <span>{{ row.game_type }}</span>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="当前状态" width="150">
+      <el-table-column v-if="showState" align="center" label="当前状态">
         <template slot-scope="{row}">
           <el-tag :type="row.state | statusFilter">
-            <span>{{ row.state |getStateStr }}</span>
+            <span>{{ row.state | getStateStr }}</span>
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="showName" align="center" label="操作">
+      <el-table-column align="center" label="操作" width="500">
         <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">
+          <el-button type="info" size="mini" @click="handleUpdate(row)">
             编辑
           </el-button>
-          <el-button v-if="row.status!='draft'" type="success" size="mini" @click="handleServer(row,'start')">
+          <el-button v-if="row.state==0" type="success" size="mini" @click="handleServer(row,'start')">
             开启
           </el-button>
-          <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleServer(row, 'stop')">
+          <el-button v-if="row.state==1" size="mini" type="danger" @click="handleServer(row, 'stop')">
             停止
           </el-button>
-          <el-button v-if="row.status!='published'" type="warning" size="mini" @click="handleServer(row,'restart')">
+          <el-button v-if="row.state==1" type="warning" size="mini" @click="handleServer(row,'restart')">
             重启
+          </el-button>
+          <router-link :to="row.id | getDetailPath">
+            <el-button type="primary" size="mini">
+              详情
+            </el-button>
+          </router-link>
+          <el-button type="success" size="mini" @click="downloadLog(row)">
+            下载日志
           </el-button>
         </template>
       </el-table-column>
@@ -106,7 +113,7 @@
 </template>
 
 <script>
-import { getList } from '@/api/server'
+import { getList, operateServer, pingServer, downloadLog } from '@/api/server'
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -118,6 +125,17 @@ const statusTagMap = {
   '-1': 'warning',
   '0': 'danger',
   '-2': 'warning'
+}
+const methodMapStr = {
+  start: '启动',
+  stop: '停止',
+  restart: '重启'
+}
+// 1. 启动  2. 停止  3.重启
+const methodStateMap = {
+  start: 1,
+  stop: 2,
+  restart: 3
 }
 export default {
   name: 'Server',
@@ -134,6 +152,9 @@ export default {
     },
     statusFilter(value) {
       return statusTagMap[value + '']
+    },
+    getDetailPath(value) {
+      return `/server/detail/${value}`
     }
   },
   data() {
@@ -155,6 +176,7 @@ export default {
   },
   created() {
     this.getList()
+    console.log(this.$route)
   },
   methods: {
     async getList() {
@@ -163,16 +185,69 @@ export default {
         this.list = items
       })
       this.listLoading = false
-    }
-  },
-  handleServer(row, method) {
-    switch (method) {
-      case 'start' :
-        break
-      case 'stop' :
-        break
-      case 'restart' :
-        break
+    },
+    handleServer(row, method) {
+      this.$confirm(`是否进行${methodMapStr[method]}操作?`, '确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const methodState = methodStateMap[method]
+        const params = {
+          id: [row.id],
+          operate_type: methodState
+        }
+        operateServer(params).then(() => {
+          if (methodStateMap[method] === 1) {
+            row.state = -1
+          }
+          if (methodStateMap[method] === 2) {
+            row.state = -2
+          }
+          if (methodStateMap[method] === 3) {
+            row.state = -2
+          }
+          this.loopGetRunResult(row, method)
+          this.$message({
+            message: '操作成功',
+            type: 'success'
+          })
+        })
+      })
+    },
+    handleUpdate(row) {
+    },
+    loopGetRunResult(row, method) {
+      const params = { id: row.id }
+      var loopM = setInterval(() => {
+        pingServer(params).then(Response => {
+          const { state } = Response.data
+          row.state = state
+          // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
+          if (state === 1 && methodStateMap[method] === 1) {
+            clearInterval(loopM)
+          }
+          if (state === 0 && methodStateMap[method] === 2) {
+            clearInterval(loopM)
+          }
+          if (state === 1 && methodStateMap[method] === 3) {
+            clearInterval(loopM)
+          }
+        })
+      }, 1000)
+    },
+    downloadLog(row) {
+      const params = { id: row.id, type: 1 }
+      downloadLog(params).then(res => {
+        const downloadElement = document.createElement('a')
+        const href = window.URL.createObjectURL(new Blob([res])) // 创建下载的链接
+        downloadElement.href = href
+        downloadElement.download = `${row.name}.zip` // 下载后文件名
+        document.body.appendChild(downloadElement)
+        downloadElement.click() // 点击下载
+        document.body.removeChild(downloadElement) // 下载完成移除元素
+        window.URL.revokeObjectURL(href) // 释放blob对象
+      })
     }
   }
 }

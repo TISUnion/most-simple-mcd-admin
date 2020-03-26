@@ -110,34 +110,36 @@ export default {
       row.edit = false
       row.config_val = row.origin_config_val
       row.description = row.origin_description
-      this.$message({
-        message: '配置值已初始为原始值',
-        type: 'warning'
-      })
     },
     confirmEdit(row) {
-      row.edit = false
-      if (row.origin_config_val === row.config_val && row.origin_description === row.description) {
-        this.$message({
-          message: '配置值未发生变更',
-          type: 'warning'
+      this.$confirm('是否确认修改配置?', '确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        row.edit = false
+        if (row.origin_config_val === row.config_val && row.origin_description === row.description) {
+          this.$message({
+            message: '配置值未发生变更',
+            type: 'warning'
+          })
+          return
+        }
+        row.origin_config_val = row.config_val
+        row.origin_description = row.description
+        const params = [{
+          config_key: row.config_key,
+          config_val: row.config_val,
+          description: row.description
+        }]
+        updateConfig(params).then(() => {
+          row.level = 4
+          this.$message({
+            message: '配置值编辑成功',
+            type: 'success'
+          })
         })
-        return
-      }
-      row.origin_config_val = row.config_val
-      row.origin_description = row.description
-      const params = [{
-        config_key: row.config_key,
-        config_val: row.config_val,
-        description: row.description
-      }]
-      updateConfig(params).then(() => {
-        row.level = 4
-        this.$message({
-          message: '配置值编辑成功',
-          type: 'success'
-        })
-      })
+      }).catch(() => { this.cancelEdit(row) })
     }
   }
 }
