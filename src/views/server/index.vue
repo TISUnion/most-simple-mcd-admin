@@ -137,10 +137,10 @@
         <el-form-item
           v-for="(param, index) in paramsForm.params"
           :key="index"
-          :label="参数"
+          label="参数"
         >
           <el-input v-model="param.value" style="width: 50%" />
-          <el-button @click.prevent="removeParam(param.value)">删除</el-button>
+          <el-button @click.prevent="removeParam(param)">删除</el-button>
         </el-form-item>
         <el-form-item>
           <el-button @click="addParam">新增参数</el-button>
@@ -255,6 +255,22 @@ export default {
       this.dialogFormVisible = true
       this.rowServerInfo = row
       row.cmd_str.map((v) => {
+        this.paramsForm.params.push({ value: v })
+      })
+    },
+    removeParam(param) {
+      console.log(param)
+      const index = this.paramsForm.params.indexOf(param)
+      console.log(index)
+      if (index !== -1) {
+        this.paramsForm.params.splice(index, 1)
+      }
+    },
+    addParam() {
+
+    },
+    reset() {
+      this.rowServerInfo.cmd_str.map((v) => {
         this.paramsForm.params.push({ value: v })
       })
     },
