@@ -29,14 +29,7 @@
         当前状态
       </el-checkbox>
     </div>
-    <el-table
-      :key="tableKey"
-      v-loading="listLoading"
-      :data="list"
-      border
-      fit
-      highlight-current-row
-    >
+    <el-table :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row>
       <el-table-column v-if="showId" align="center" label="id">
         <template slot-scope="{row}">
           <span>{{ row.id | ellipsis }}</span>
@@ -67,6 +60,18 @@
           <span>{{ row.memory }}M</span>
         </template>
       </el-table-column>
+      <el-table-column v-if="showMemory" align="center" label="服务器ip">
+        <template slot-scope="{row}">
+          <el-select v-model="selectIp" placeholder="请选择ip" @change="copySelectedIp(row)">
+            <el-option
+              v-for="(item, index) in row.ips"
+              :key="index"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </template>
+      </el-table-column>
       <el-table-column v-if="showVersion" align="center" label="服务端版本">
         <template slot-scope="{row}">
           <span>{{ row.version }}</span>
@@ -86,29 +91,71 @@
       </el-table-column>
       <el-table-column align="center" label="操作" width="500">
         <template slot-scope="{row}">
-          <el-button type="info" size="mini" @click="handleUpdate(row)">
+          <el-button type="info" size="mini" @click="updateServerInfo(row)">
             编辑
           </el-button>
-          <el-button v-if="row.state==0" type="success" size="mini" @click="handleServer(row,'start')">
+          <el-button v-if="row.state==0" size="mini" type="success" @click="handleServer(row,'start')">
             开启
           </el-button>
           <el-button v-if="row.state==1" size="mini" type="danger" @click="handleServer(row, 'stop')">
             停止
           </el-button>
-          <el-button v-if="row.state==1" type="warning" size="mini" @click="handleServer(row,'restart')">
+          <el-button v-if="row.state==1" size="mini" type="warning" @click="handleServer(row,'restart')">
             重启
           </el-button>
           <router-link :to="row.id | getDetailPath">
-            <el-button type="primary" size="mini">
+            <el-button size="mini" type="primary">
               详情
             </el-button>
           </router-link>
-          <el-button type="success" size="mini" @click="downloadLog(row)">
+          <el-button size="mini" type="success" @click="downloadLog(row)">
             下载日志
           </el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog title="编辑服务端信息" :visible.sync="dialogFormVisible">
+      <el-form label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
+        <el-form-item label="名称">
+          <el-input v-model="rowServerInfo.name" size="small" class="filter-item" placeholder="服务端名称" />
+        </el-form-item>
+        <el-form-item label="端口">
+          <el-input v-model="rowServerInfo.port" size="small" class="filter-item" placeholder="服务端端口" />
+        </el-form-item>
+        <el-form-item label="内存">
+          <el-input v-model="rowServerInfo.memory" size="small" class="filter-item" placeholder="服务端使用内存" />
+        </el-form-item>
+        <el-form-item label="版本">
+          <el-input v-model="rowServerInfo.version" size="small" class="filter-item" placeholder="服务端版本" />
+        </el-form-item>
+        <el-form-item label="游戏模式">
+          <el-input v-model="rowServerInfo.game_type" size="small" class="filter-item" placeholder="服务端模式" />
+        </el-form-item>
+      </el-form>
+      <el-divider><i class="el-icon-s-operation" />启动参数设置</el-divider>
+      <el-form :model="paramsForm" label-width="100px">
+        <el-form-item
+          v-for="(param, index) in paramsForm.params"
+          :key="index"
+          :label="参数"
+        >
+          <el-input v-model="param.value" style="width: 50%" />
+          <el-button @click.prevent="removeParam(param.value)">删除</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="addParam">新增参数</el-button>
+          <el-button @click="reset">重置</el-button>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">
+          Cancel
+        </el-button>
+        <el-button type="primary">
+          Confirm
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -168,23 +215,57 @@ export default {
       showVersion: true,
       showModel: true,
       showState: true,
+      selectIp: '',
       tableKey: 0,
       list: null,
       total: 0,
-      listLoading: true
+      listLoading: true,
+      dialogFormVisible: false,
+      rowServerInfo: null,
+      paramsForm: { params: [] }
     }
   },
   created() {
     this.getList()
-    console.log(this.$route)
+    // rowServerInfo初始化
+    this.rowServerInfo = {
+      name: '',
+      port: 0,
+      memory: 0,
+      version: '',
+      game_type: '',
+      state: 2
+    }
   },
   methods: {
     async getList() {
       await getList().then(Response => {
         const items = Response.data
+        // 如果是正在启动，就循环获取状态
+        items.map((v, k) => {
+          if (v.state !== 0 && v.state !== 1) {
+            this.loopGetRunResult(v, 'start')
+          }
+        })
         this.list = items
       })
       this.listLoading = false
+    },
+    updateServerInfo(row) {
+      this.dialogFormVisible = true
+      this.rowServerInfo = row
+      row.cmd_str.map((v) => {
+        this.paramsForm.params.push({ value: v })
+      })
+    },
+    copySelectedIp(row) {
+      console.log(row)
+      this.$copyText(this.selectIp + ':' + row.port).then(() => {
+        this.$message({
+          message: '复制成功',
+          type: 'success'
+        })
+      })
     },
     handleServer(row, method) {
       this.$confirm(`是否进行${methodMapStr[method]}操作?`, '确认', {
@@ -214,8 +295,6 @@ export default {
           })
         })
       })
-    },
-    handleUpdate(row) {
     },
     loopGetRunResult(row, method) {
       const params = { id: row.id }
@@ -252,3 +331,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.el-button+.el-button{
+  margin: 0;
+}
+</style>

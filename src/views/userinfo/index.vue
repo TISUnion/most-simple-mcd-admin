@@ -2,47 +2,47 @@
   <div class="userinfo">
     <el-row>
       <el-col :span="24">
-        <div>昵称：{{nickname}}</div>
+        <div>昵称：{{ nickname }}</div>
       </el-col>
     </el-row>
     <el-row>
       <el-col :span="24">
-        <div>账号：{{account}}</div>
+        <div>账号：{{ account }}</div>
       </el-col>
     </el-row>
     <el-row>
       <el-col :span="24">
-        <div>密码：{{password}}</div>
+        <div>密码：{{ password }}</div>
       </el-col>
     </el-row>
     <el-row>
       <el-col :span="24">
-        <div>头像：{{avatar}}</div>
+        <div>头像：{{ avatar }}</div>
       </el-col>
     </el-row>
   </div>
 </template>
 
 <script>
-import { getInfo } from "@/api/user";
+import { getInfo } from '@/api/user'
 export default {
   data() {
     return {
-      nickname: "",
-      account: "",
-      password: "",
-      avatar: ""
-    };
+      nickname: '',
+      account: '',
+      password: '',
+      avatar: ''
+    }
   },
   created() {
     getInfo().then(response => {
-      const { data } = response;
+      const { data } = response
       this.nickname = data.nickname
       this.account = data.account
       this.avatar = data.avatar
-    });
+    })
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>

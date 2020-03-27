@@ -105,16 +105,19 @@
     <el-divider><i class="el-icon-s-operation" /></el-divider>
     <template>
       <span>实时命令交互</span>
-      <el-button class="panel-title-btn" type="success" size="medium" @click="startPanel">{{ panelSwitch | getPanelSwitch }}</el-button>
+      <el-button class="panel-title-btn" type="success" size="medium" @click="handlePanel">{{ panelSwitch | getPanelSwitch }}</el-button>
       <el-button class="panel-title-btn" type="warning" size="medium" @click="resetPanel">清空</el-button>
       <div ref="panel" class="interact-panel" />
-      <el-input v-model="command" placeholder="" class="edit-input" size="medium" @keyup.enter.native="runCommand" />
+      <el-input v-model="command" :disabled="!panelSwitch" placeholder="" class="edit-input" size="medium" @keyup.enter.native="runCommand" />
     </template>
   </div>
 </template>
 
 <script>
 import { getServerDetail } from '@/api/server'
+
+const Base64 = require('js-base64').Base64
+
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -149,6 +152,11 @@ export default {
     this.id = this.$route.params.id
     this.getDetail()
   },
+  destroyed() {
+    if (this.panelSwitch) {
+      this.panelWebsocket.close() // 离开路由之后断开websocket连接
+    }
+  },
   methods: {
     getDetail() {
       getServerDetail({ id: this.id }).then(Response => {
@@ -168,7 +176,23 @@ export default {
     runCommand() {
       if (this.command !== '') {
         this.addMsgToPanel(this.command)
+        const params = {
+          command: this.command,
+          type: 2
+        }
+        this.panelWebsocket.send(JSON.stringify(params))
+        if (this.command === 'stop' || this.command === '/stop') {
+          this.panelWebsocket.close()
+          this.panelSwitch = false
+        }
         this.command = ''
+      }
+    },
+    handlePanel() {
+      if (!this.panelSwitch) {
+        this.startPanel()
+      } else {
+        this.stopPanel()
       }
     },
     startPanel() {
@@ -178,7 +202,41 @@ export default {
           type: 'warning'
         })
       }
-      this.panelWebsocket = new WebSocket(process.env.VUE_APP_BASE_API + '/server/std/listen')
+      if (this.detail.state !== 1) {
+        this.$message({
+          message: '服务端未启动',
+          type: 'warning'
+        })
+        return
+      }
+      if (this.panelSwitch) {
+        return
+      }
+      this.panelWebsocket = new WebSocket(process.env.VUE_APP_WEBSOCKET_PATH + '?id=' + this.id)
+      this.panelWebsocket.onmessage = (e) => {
+        const redata = JSON.parse(e.data)
+        this.addMsgToPanel(Base64.decode(redata.origin_data))
+      }
+      this.panelWebsocket.onopen = () => {
+        this.panelWebsocket.send(this.$store.state.user.token) // 发送校验token
+        this.panelSwitch = true
+        this.addMsgToPanel('连接成功！')
+      }
+      this.panelWebsocket.onerror = () => {
+        this.panelSwitch = false
+        this.addMsgToPanel('连接失败！')
+      }
+      this.panelWebsocket.onclose = () => {
+        this.panelSwitch = false
+        this.addMsgToPanel('连接已中断！')
+      }
+    },
+    stopPanel() {
+      if (!this.panelSwitch) {
+        return
+      }
+      this.panelWebsocket.close()
+      this.panelSwitch = false
     },
     addMsgToPanel(msg) {
       const newSpanContent = document.createElement('div')
