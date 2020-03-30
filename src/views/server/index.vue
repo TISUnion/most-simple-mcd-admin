@@ -149,10 +149,10 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">
-          Cancel
+          取消
         </el-button>
-        <el-button type="primary">
-          Confirm
+        <el-button type="primary" @click="saveServerInfo">
+          提交
         </el-button>
       </div>
     </el-dialog>
@@ -160,7 +160,7 @@
 </template>
 
 <script>
-import { getList, operateServer, pingServer, downloadLog } from '@/api/server'
+import { getList, operateServer, pingServer, downloadLog, updateServerInfo } from '@/api/server'
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -254,28 +254,44 @@ export default {
     updateServerInfo(row) {
       this.dialogFormVisible = true
       this.rowServerInfo = row
+      this.paramsForm.params = []
       row.cmd_str.map((v) => {
         this.paramsForm.params.push({ value: v })
       })
     },
     removeParam(param) {
-      console.log(param)
       const index = this.paramsForm.params.indexOf(param)
-      console.log(index)
       if (index !== -1) {
         this.paramsForm.params.splice(index, 1)
       }
     },
     addParam() {
-
+      this.paramsForm.params.push({
+        value: ''
+      })
     },
     reset() {
+      this.paramsForm.params = []
       this.rowServerInfo.cmd_str.map((v) => {
         this.paramsForm.params.push({ value: v })
       })
     },
+    saveServerInfo() {
+      const params = this.rowServerInfo
+      const cmd_strs = []
+      this.paramsForm.params.map((v) => {
+        cmd_strs.push(v.value)
+      })
+      params['cmd_str'] = cmd_strs
+      updateServerInfo(params).then(() => {
+        this.$message({
+          message: '修改成功',
+          type: 'success'
+        })
+        this.dialogFormVisible = false
+      })
+    },
     copySelectedIp(row) {
-      console.log(row)
       this.$copyText(this.selectIp + ':' + row.port).then(() => {
         this.$message({
           message: '复制成功',

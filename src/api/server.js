@@ -39,3 +39,11 @@ export function getServerDetail(params) {
     params
   })
 }
+
+export function updateServerInfo(data) {
+  return request({
+    url: '/api/v1/server/info',
+    method: 'POST',
+    data
+  })
+}

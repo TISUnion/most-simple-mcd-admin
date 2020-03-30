@@ -56,9 +56,9 @@ service.interceptors.response.use(
       // 2009190002: Token expired;
       if (res.code === 2009190002) {
         // to re-login
-        MessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
-          confirmButtonText: 'Re-Login',
-          cancelButtonText: 'Cancel',
+        MessageBox.confirm('你的登录凭证已过期, 请重新登陆', '确认登陆', {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
           store.dispatch('user/resetToken').then(() => {
