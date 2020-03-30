@@ -59,15 +59,26 @@ export const constantRoutes = [
       meta: { title: '配置管理', icon: 'tree' }
     }, {
       path: 'server',
-      name: '服务端列表',
+      name: '服务端管理',
       component: () => import('@/views/server/index'),
-      meta: { title: '服务端列表', icon: 'table' },
+      meta: { title: '服务端管理', icon: 'table' },
       children: []
     }, {
       path: 'server/detail/:id',
       name: '服务端详情',
       component: () => import('@/views/server/detail'),
       meta: { title: '服务端详情' },
+      hidden: true
+    }, {
+      path: 'resource/list',
+      name: '服务端moni列表',
+      component: () => import('@/views/resource/list'),
+      meta: { title: '服务端moni列表', icon: 'dashboard' }
+    }, {
+      path: 'resource/moni',
+      name: '服务端moni实时面板',
+      component: () => import('@/views/resource/monitor'),
+      meta: { title: '服务端moni' },
       hidden: true
     }]
   },

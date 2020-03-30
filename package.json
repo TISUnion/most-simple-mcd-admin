@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "axios": "0.18.1",
+    "echarts": "^4.7.0",
     "element-ui": "2.13.0",
     "http-proxy-middleware": "^0.21.0",
     "js-base64": "^2.5.2",
