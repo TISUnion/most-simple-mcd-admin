@@ -5,6 +5,32 @@
 <script>
 import echarts from 'echarts'
 import resize from './mixins/resize'
+const data = [
+  { name: '2018/01/01 00:00:10', value: ['2018/01/01 00:00:10', 30] },
+  { name: '2018/01/01 00:10:10', value: ['2018/01/01 00:10:10', 35] },
+  { name: '2018/01/01 00:20:10', value: ['2018/01/01 00:20:10', 32] },
+  { name: '2018/01/01 00:30:10', value: ['2018/01/01 00:30:10', 40] },
+  { name: '2018/01/01 00:40:10', value: ['2018/01/01 00:40:10', 50] },
+  { name: '2018/01/01 00:50:10', value: ['2018/01/01 00:50:10', 38] },
+  { name: '2018/01/01 01:50:10', value: ['2018/01/01 01:50:10', 31] },
+  { name: '2018/01/01 02:50:10', value: ['2018/01/01 02:50:10', 45] },
+  { name: '2018/01/01 03:50:10', value: ['2018/01/01 03:50:10', 42] },
+  { name: '2018/01/01 04:50:10', value: ['2018/01/01 04:50:10', 46] },
+  { name: '2018/01/01 05:50:10', value: ['2018/01/01 05:50:10', 44] },
+  { name: '2018/01/01 06:50:10', value: ['2018/01/01 06:50:10', 38] },
+  { name: '2018/01/01 07:50:10', value: ['2018/01/01 07:50:10', 32] },
+  { name: '2018/01/01 10:50:10', value: ['2018/01/01 10:50:10', 45] },
+  { name: '2018/01/01 11:50:10', value: ['2018/01/01 11:50:10', 10] },
+  { name: '2018/01/01 12:50:10', value: ['2018/01/01 12:50:10', 56] },
+  { name: '2018/01/01 14:50:10', value: ['2018/01/01 14:50:10', 44] },
+  { name: '2018/01/01 15:50:10', value: ['2018/01/01 15:50:10', 38] },
+  { name: '2018/01/01 16:50:10', value: ['2018/01/01 16:50:10', 32] }
+]
+// x轴坐标数据
+var xData = [
+  { name: '2018/01/01 00:00:00', value: ['2018/01/01 00:00:00', 0] },
+  { name: '2018/01/01 00:00:00', value: ['2018/01/01 23:59:59', 0] }
+]
 
 export default {
   mixins: [resize],
@@ -75,7 +101,7 @@ export default {
           itemWidth: 14,
           itemHeight: 5,
           itemGap: 13,
-          data: ['CMCC', 'CTCC', 'CUCC'],
+          data: ['CMCC'],
           right: '4%',
           textStyle: {
             fontSize: 12,
@@ -90,14 +116,23 @@ export default {
           containLabel: true
         },
         xAxis: [{
-          type: 'category',
+          type: 'time',
           boundaryGap: false,
           axisLine: {
             lineStyle: {
               color: '#57617B'
             }
           },
-          data: ['13:00', '13:05', '13:10', '13:15', '13:20', '13:25', '13:30', '13:35', '13:40', '13:45', '13:50', '13:55']
+          splitNumber: 7, // 可以通过它控制x轴显示的坐标轴的数量
+          splitLine: {
+            show: false
+          },
+          axisLabel: {
+            textStyle: {
+              fontSize: 14,
+              color: 'white'
+            }
+          }
         }],
         yAxis: [{
           type: 'value',
@@ -105,6 +140,7 @@ export default {
           axisTick: {
             show: false
           },
+          boundaryGap: [0, '100%'],
           axisLine: {
             lineStyle: {
               color: '#57617B'
@@ -125,10 +161,9 @@ export default {
         series: [{
           name: 'CMCC',
           type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 5,
+          symbolSize: 10,
           showSymbol: false,
+          hoverAnimation: false,
           lineStyle: {
             normal: {
               width: 1
@@ -155,74 +190,13 @@ export default {
 
             }
           },
-          data: [220, 182, 191, 134, 150, 120, 110, 125, 145, 122, 165, 122]
+          data: data
         }, {
-          name: 'CTCC',
           type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 5,
           showSymbol: false,
-          lineStyle: {
-            normal: {
-              width: 1
-            }
-          },
-          areaStyle: {
-            normal: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                offset: 0,
-                color: 'rgba(0, 136, 212, 0.3)'
-              }, {
-                offset: 0.8,
-                color: 'rgba(0, 136, 212, 0)'
-              }], false),
-              shadowColor: 'rgba(0, 0, 0, 0.1)',
-              shadowBlur: 10
-            }
-          },
-          itemStyle: {
-            normal: {
-              color: 'rgb(0,136,212)',
-              borderColor: 'rgba(0,136,212,0.2)',
-              borderWidth: 12
-
-            }
-          },
-          data: [120, 110, 125, 145, 122, 165, 122, 220, 182, 191, 134, 150]
-        }, {
-          name: 'CUCC',
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 5,
-          showSymbol: false,
-          lineStyle: {
-            normal: {
-              width: 1
-            }
-          },
-          areaStyle: {
-            normal: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                offset: 0,
-                color: 'rgba(219, 50, 51, 0.3)'
-              }, {
-                offset: 0.8,
-                color: 'rgba(219, 50, 51, 0)'
-              }], false),
-              shadowColor: 'rgba(0, 0, 0, 0.1)',
-              shadowBlur: 10
-            }
-          },
-          itemStyle: {
-            normal: {
-              color: 'rgb(219,50,51)',
-              borderColor: 'rgba(219,50,51,0.2)',
-              borderWidth: 12
-            }
-          },
-          data: [220, 182, 125, 145, 122, 191, 134, 150, 120, 110, 165, 122]
+          data: xData,
+          itemStyle: { normal: { opacity: 0 }},
+          lineStyle: { normal: { opacity: 0 }}
         }]
       })
     }
