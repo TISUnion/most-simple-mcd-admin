@@ -14,7 +14,9 @@
         label="名称"
       />
       <el-table-column label="查看实时资源消耗">
-        <router-link to="/resource/moni"><el-button size="small" type="success">查看</el-button></router-link>
+        <template slot-scope="{row}">
+          <router-link :to="row.id | addId"><el-button size="small" type="success">查看</el-button></router-link>
+        </template>
       </el-table-column>
     </el-table>
   </div>
@@ -24,6 +26,11 @@
 import { getList } from '@/api/server'
 
 export default {
+  filters: {
+    addId(value) {
+      return '/resource/moni/' + value
+    }
+  },
   data() {
     return {
       loading: true,

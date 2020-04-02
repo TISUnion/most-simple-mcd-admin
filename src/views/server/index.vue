@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
+      <el-button type="primary" class="filter-item" style="margin-left:15px;" size="small" @click="upFileFormVisible = true">上传服务端<i class="el-icon-upload el-icon--right" /></el-button>
       <el-checkbox v-model="showId" disabled class="filter-item" style="margin-left:15px;">
         id
       </el-checkbox>
@@ -156,11 +157,48 @@
         </el-button>
       </div>
     </el-dialog>
+    <el-dialog title="上传服务端" :visible.sync="upFileFormVisible">
+      <el-form label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
+        <el-form-item label="上传">
+          <el-upload
+            ref="upload"
+            class="upload-demo"
+            drag
+            :limit="1"
+            :auto-upload="false"
+            accept="jar"
+            action="url"
+            :http-request="uploadFile"
+          >
+            <i class="el-icon-upload" />
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+            <div slot="tip" class="el-upload__tip">只能上传jar文件</div>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="名称">
+          <el-input v-model="newServerInfo.name" size="small" class="filter-item" placeholder="服务端名称" />
+        </el-form-item>
+        <el-form-item label="端口">
+          <el-input v-model="newServerInfo.port" size="small" class="filter-item" placeholder="服务端端口" />
+        </el-form-item>
+        <el-form-item label="内存">
+          <el-input v-model="newServerInfo.memory" size="small" class="filter-item" placeholder="服务端使用内存" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="upFileFormVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" @click="newServer">
+          提交
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { getList, operateServer, pingServer, downloadLog, updateServerInfo } from '@/api/server'
+import { getList, operateServer, pingServer, downloadLog, updateServerInfo, uploadServer } from '@/api/server'
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -178,11 +216,12 @@ const methodMapStr = {
   stop: '停止',
   restart: '重启'
 }
-// 1. 启动  2. 停止  3.重启
+// 1. 启动  2. 停止  3.重启 4.未知
 const methodStateMap = {
   start: 1,
   stop: 2,
-  restart: 3
+  restart: 3,
+  unknow: 4
 }
 export default {
   name: 'Server',
@@ -221,8 +260,11 @@ export default {
       total: 0,
       listLoading: true,
       dialogFormVisible: false,
+      upFileFormVisible: false,
       rowServerInfo: null,
-      paramsForm: { params: [] }
+      newServerInfo: {},
+      paramsForm: { params: [] },
+      mcFile: []
     }
   },
   created() {
@@ -244,7 +286,7 @@ export default {
         // 如果是正在启动，就循环获取状态
         items.map((v, k) => {
           if (v.state !== 0 && v.state !== 1) {
-            this.loopGetRunResult(v, 'start')
+            this.loopGetRunResult(v, 'unknow')
           }
         })
         this.list = items
@@ -283,6 +325,8 @@ export default {
         cmd_strs.push(v.value)
       })
       params['cmd_str'] = cmd_strs
+      params.port = Number(params.port)
+      params.memory = Number(params.memory)
       updateServerInfo(params).then(() => {
         this.$message({
           message: '修改成功',
@@ -336,12 +380,17 @@ export default {
           row.state = state
           // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
           if (state === 1 && methodStateMap[method] === 1) {
+            this.getList()
             clearInterval(loopM)
           }
           if (state === 0 && methodStateMap[method] === 2) {
             clearInterval(loopM)
           }
           if (state === 1 && methodStateMap[method] === 3) {
+            clearInterval(loopM)
+          }
+          if (methodStateMap[method] === 4 && (state === 1 || state === 0)) {
+            this.getList()
             clearInterval(loopM)
           }
         })
@@ -358,6 +407,25 @@ export default {
         downloadElement.click() // 点击下载
         document.body.removeChild(downloadElement) // 下载完成移除元素
         window.URL.revokeObjectURL(href) // 释放blob对象
+      })
+    },
+    uploadFile(params) {
+      this.mcFile = params
+    },
+    newServer() {
+      this.upFileFormVisible = false
+      this.$refs.upload.submit()
+      const form = new FormData()
+      form.append('file', this.mcFile.file)
+      form.append('name', this.newServerInfo.name)
+      form.append('port', this.newServerInfo.port)
+      form.append('memory', this.newServerInfo.memory)
+      uploadServer(form).then(() => {
+        this.$message({
+          message: '上传成功成功',
+          type: 'success'
+        })
+        this.getList()
       })
     }
   }

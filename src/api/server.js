@@ -47,3 +47,11 @@ export function updateServerInfo(data) {
     data
   })
 }
+
+export function uploadServer(data) {
+  return request({
+    url: '/api/v1/upload/server',
+    method: 'POST',
+    data
+  })
+}

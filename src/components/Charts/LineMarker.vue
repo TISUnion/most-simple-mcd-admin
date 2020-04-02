@@ -1,48 +1,20 @@
 <template>
-  <div :id="id" :class="className" :style="{height:height,width:width}" :serverId="serverId" />
+
+  <div v-loading="loading" class="app-contaniner">
+    <h4>服务端资源消耗实时显示</h4>
+    <div id="percent" :style="{height:height,width:width}" />
+    <el-divider />
+    <div id="area" :style="{height:height,width:width}" />
+  </div>
 </template>
 
 <script>
 import echarts from 'echarts'
 import resize from './mixins/resize'
-const data = [
-  { name: '2018/01/01 00:00:10', value: ['2018/01/01 00:00:10', 30] },
-  { name: '2018/01/01 00:10:10', value: ['2018/01/01 00:10:10', 35] },
-  { name: '2018/01/01 00:20:10', value: ['2018/01/01 00:20:10', 32] },
-  { name: '2018/01/01 00:30:10', value: ['2018/01/01 00:30:10', 40] },
-  { name: '2018/01/01 00:40:10', value: ['2018/01/01 00:40:10', 50] },
-  { name: '2018/01/01 00:50:10', value: ['2018/01/01 00:50:10', 38] },
-  { name: '2018/01/01 01:50:10', value: ['2018/01/01 01:50:10', 31] },
-  { name: '2018/01/01 02:50:10', value: ['2018/01/01 02:50:10', 45] },
-  { name: '2018/01/01 03:50:10', value: ['2018/01/01 03:50:10', 42] },
-  { name: '2018/01/01 04:50:10', value: ['2018/01/01 04:50:10', 46] },
-  { name: '2018/01/01 05:50:10', value: ['2018/01/01 05:50:10', 44] },
-  { name: '2018/01/01 06:50:10', value: ['2018/01/01 06:50:10', 38] },
-  { name: '2018/01/01 07:50:10', value: ['2018/01/01 07:50:10', 32] },
-  { name: '2018/01/01 10:50:10', value: ['2018/01/01 10:50:10', 45] },
-  { name: '2018/01/01 11:50:10', value: ['2018/01/01 11:50:10', 10] },
-  { name: '2018/01/01 12:50:10', value: ['2018/01/01 12:50:10', 56] },
-  { name: '2018/01/01 14:50:10', value: ['2018/01/01 14:50:10', 44] },
-  { name: '2018/01/01 15:50:10', value: ['2018/01/01 15:50:10', 38] },
-  { name: '2018/01/01 16:50:10', value: ['2018/01/01 16:50:10', 32] }
-]
-// x轴坐标数据
-var xData = [
-  { name: '2018/01/01 00:00:00', value: ['2018/01/01 00:00:00', 0] },
-  { name: '2018/01/01 00:00:00', value: ['2018/01/01 23:59:59', 0] }
-]
-
+import { parseTime } from '@/utils/index'
 export default {
   mixins: [resize],
   props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    id: {
-      type: String,
-      default: 'chart'
-    },
     width: {
       type: String,
       default: '200px'
@@ -58,28 +30,69 @@ export default {
   },
   data() {
     return {
-      chart: null
+      percentChart: null,
+      areaChart: null,
+      rWebsocket: null,
+      loading: true
     }
   },
   mounted() {
     this.initChart()
+    this.initWebsocket()
   },
   beforeDestroy() {
-    if (!this.chart) {
-      return
+    if (this.percentChart) {
+      this.percentChart.dispose()
+      this.percentChart = null
     }
-    this.chart.dispose()
-    this.chart = null
+    if (this.areaChart) {
+      this.areaChart.dispose()
+      this.areaChart = null
+    }
+    if (this.rWebsocket) {
+      this.rWebsocket.close()
+      this.rWebsocket = null
+    }
   },
   methods: {
     initChart() {
-      this.chart = echarts.init(document.getElementById(this.id))
-
-      this.chart.setOption({
+      this.percentChart = echarts.init(document.getElementById('percent'))
+      this.areaChart = echarts.init(document.getElementById('area'))
+    },
+    initWebsocket() {
+      if (typeof (WebSocket) === 'undefined') {
+        this.$message({
+          message: '您的浏览器不支持该功能',
+          type: 'warning'
+        })
+        return
+      }
+      this.rWebsocket = new WebSocket(process.env.VUE_APP_RESOURCE_WEBSOCKET_PATH + '?id=' + this.serverId)
+      const data = { cpuUsedPercent: [], memoryUsedPercent: [], memoryUsed: [] }
+      this.rWebsocket.onmessage = (e) => {
+        const now = parseTime(new Date(), '{y}/{m}/{d} {h}:{i}:{s}')
+        const redata = JSON.parse(e.data)
+        data.cpuUsedPercent.push({ name: now, value: [now, redata.cpu_used_percent] })
+        data.memoryUsedPercent.push({ name: now, value: [now, redata.memory_used_percent] })
+        data.memoryUsed.push({ name: now, value: [now, redata.memory_used / 1024 / 1024] })
+        this.percentChart.setOption(this.setPercentOption(data))
+        this.areaChart.setOption(this.setAreaOption(data))
+      }
+      this.rWebsocket.onopen = () => {
+        this.rWebsocket.send(this.$store.state.user.token) // 发送校验token
+        this.$message({
+          message: '连接成功！',
+          type: 'success'
+        })
+        this.loading = false
+      }
+    },
+    setPercentOption(data) {
+      return {
         backgroundColor: '#394056',
         title: {
           top: 20,
-          text: '服务端资源消耗实时显示',
+          text: 'CPU与内存占用比',
           textStyle: {
             fontWeight: 'normal',
             fontSize: 16,
@@ -101,10 +114,10 @@ export default {
           itemWidth: 14,
           itemHeight: 5,
           itemGap: 13,
-          data: ['CMCC'],
+          data: ['cpu占用比', '内存占用比'],
           right: '4%',
           textStyle: {
-            fontSize: 12,
+            fontSize: 15,
             color: '#F1F1F3'
           }
         },
@@ -159,9 +172,9 @@ export default {
           }
         }],
         series: [{
-          name: 'CMCC',
+          name: 'cpu占用比',
           type: 'line',
-          symbolSize: 10,
+          symbolSize: 2,
           showSymbol: false,
           hoverAnimation: false,
           lineStyle: {
@@ -187,18 +200,164 @@ export default {
               color: 'rgb(137,189,27)',
               borderColor: 'rgba(137,189,2,0.27)',
               borderWidth: 12
+            }
+          },
+          data: data.cpuUsedPercent
+        }, {
+          name: '内存占用比',
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 2,
+          showSymbol: false,
+          lineStyle: {
+            normal: {
+              width: 1
+            }
+          },
+          areaStyle: {
+            normal: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                offset: 0,
+                color: 'rgba(0, 136, 212, 0.3)'
+              }, {
+                offset: 0.8,
+                color: 'rgba(0, 136, 212, 0)'
+              }], false),
+              shadowColor: 'rgba(0, 0, 0, 0.1)',
+              shadowBlur: 10
+            }
+          },
+          itemStyle: {
+            normal: {
+              color: 'rgb(0,136,212)',
+              borderColor: 'rgba(0,136,212,0.2)',
+              borderWidth: 12
 
             }
           },
-          data: data
-        }, {
-          type: 'line',
-          showSymbol: false,
-          data: xData,
-          itemStyle: { normal: { opacity: 0 }},
-          lineStyle: { normal: { opacity: 0 }}
+          data: data.memoryUsedPercent
         }]
-      })
+      }
+    },
+    setAreaOption(data) {
+      return {
+        backgroundColor: '#394056',
+        title: {
+          top: 20,
+          text: '内存使用空间',
+          textStyle: {
+            fontWeight: 'normal',
+            fontSize: 16,
+            color: '#F1F1F3'
+          },
+          left: '1%'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            lineStyle: {
+              color: '#57617B'
+            }
+          }
+        },
+        legend: {
+          top: 20,
+          icon: 'rect',
+          itemWidth: 14,
+          itemHeight: 5,
+          itemGap: 13,
+          data: ['内存占用空间'],
+          right: '4%',
+          textStyle: {
+            fontSize: 15,
+            color: '#F1F1F3'
+          }
+        },
+        grid: {
+          top: 100,
+          left: '2%',
+          right: '2%',
+          bottom: '2%',
+          containLabel: true
+        },
+        xAxis: [{
+          type: 'time',
+          boundaryGap: false,
+          axisLine: {
+            lineStyle: {
+              color: '#57617B'
+            }
+          },
+          splitNumber: 7, // 可以通过它控制x轴显示的坐标轴的数量
+          splitLine: {
+            show: false
+          },
+          axisLabel: {
+            textStyle: {
+              fontSize: 14,
+              color: 'white'
+            }
+          }
+        }],
+        yAxis: [{
+          type: 'value',
+          name: '(MB)',
+          axisTick: {
+            show: false
+          },
+          boundaryGap: [0, '100%'],
+          axisLine: {
+            lineStyle: {
+              color: '#57617B'
+            }
+          },
+          axisLabel: {
+            margin: 10,
+            textStyle: {
+              fontSize: 14
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#57617B'
+            }
+          }
+        }],
+        series: [{
+          name: '内存占用空间',
+          type: 'line',
+          symbolSize: 2,
+          showSymbol: false,
+          hoverAnimation: false,
+          lineStyle: {
+            normal: {
+              width: 1
+            }
+          },
+          areaStyle: {
+            normal: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                offset: 0,
+                color: 'rgba(137, 189, 27, 0.3)'
+              }, {
+                offset: 0.8,
+                color: 'rgba(137, 189, 27, 0)'
+              }], false),
+              shadowColor: 'rgba(0, 0, 0, 0.1)',
+              shadowBlur: 10
+            }
+          },
+          itemStyle: {
+            normal: {
+              color: 'rgb(137,189,27)',
+              borderColor: 'rgba(137,189,2,0.27)',
+              borderWidth: 12
+            }
+          },
+          data: data.memoryUsed
+        }]
+      }
     }
   }
 }

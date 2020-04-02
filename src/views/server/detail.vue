@@ -201,6 +201,7 @@ export default {
           message: '您的浏览器不支持该功能',
           type: 'warning'
         })
+        return
       }
       if (this.detail.state !== 1) {
         this.$message({

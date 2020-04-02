@@ -1,6 +1,10 @@
 <template>
-  <div v-loading="loading" class="app-container">
-    <Chart height="90vh" width="100%" />
+  <div class="app-container">
+    <Chart
+      height="90vh"
+      width="100%"
+      server-id="a72498c4-3e1a-462d-a0c2-3eecc79c054d"
+    />
   </div>
 </template>
 <script>
@@ -9,7 +13,11 @@ export default {
   name: 'Monitor',
   components: { Chart },
   data() {
-    return {}
+    return {
+      id: ''
+    }
+  }, created() {
+    this.id = this.$route.params.id
   }
 }
 </script>
