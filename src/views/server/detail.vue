@@ -82,9 +82,37 @@
         <el-col :offset="1" :span="8">
           <div class="grid-content bg-purple-light">运行命令：
             <el-table ref="dragTable" :data="detail.cmd_str" row-key="id" border fit highlight-current-row style="width: 100%;margin-top:15px">
-              <el-table-column align="center" label="ID">
+              <el-table-column align="center" label="命令参数">
                 <template slot-scope="{row}">
                   <span>{{ row }}</span>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :offset="1" :span="8">
+          <div class="grid-content bg-purple-light">插件列表：
+            <el-table ref="dragTable" :data="pluginsInfo" row-key="id" border fit highlight-current-row style="width: 100%;margin-top:15px">
+              <el-table-column align="center" label="名称">
+                <template slot-scope="{row}">
+                  <span>{{ row.name }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="命令">
+                <template slot-scope="{row}">
+                  <span>{{ row.command_name }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="是否被禁止">
+                <template slot-scope="{row}">
+                  <span>{{ row.is_ban ? "是" : "否" }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column align="center" label="说明">
+                <template slot-scope="{row}">
+                  <span>{{ row.description }}</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -160,16 +188,9 @@ export default {
   methods: {
     getDetail() {
       getServerDetail({ id: this.id }).then(Response => {
-        const { server_info } = Response.data
-        this.detail.name = server_info.name
-        this.detail.cmd_str = server_info.cmd_str
-        this.detail.port = server_info.port
-        this.detail.run_rath = server_info.run_rath
-        this.detail.is_mirror = server_info.is_mirror
-        this.detail.memory = server_info.memory
-        this.detail.game_type = server_info.game_type
-        this.detail.version = server_info.version
-        this.detail.state = server_info.state
+        const { server_info, plugin_info } = Response.data
+        this.detail = server_info
+        this.pluginsInfo = plugin_info 
         this.loading = false
       })
     },
