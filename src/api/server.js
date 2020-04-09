@@ -55,3 +55,11 @@ export function uploadServer(data) {
     data
   })
 }
+
+export function getConfigVal(params) {
+  return request({
+    url: '/api/v1/config/val',
+    method: 'GET',
+    params
+  })
+}

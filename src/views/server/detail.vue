@@ -190,7 +190,7 @@ export default {
       getServerDetail({ id: this.id }).then(Response => {
         const { server_info, plugin_info } = Response.data
         this.detail = server_info
-        this.pluginsInfo = plugin_info 
+        this.pluginsInfo = plugin_info
         this.loading = false
       })
     },

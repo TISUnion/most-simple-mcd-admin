@@ -75,7 +75,7 @@ export const constantRoutes = [
       component: () => import('@/views/resource/list'),
       meta: { title: '服务端moni列表', icon: 'dashboard' }
     }, {
-      path: 'resource/moni/:id',
+      path: 'resource/moni/:id/:name',
       name: '服务端moni实时面板',
       component: () => import('@/views/resource/monitor'),
       meta: { title: '服务端moni' },

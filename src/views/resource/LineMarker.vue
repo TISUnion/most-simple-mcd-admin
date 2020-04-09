@@ -1,7 +1,7 @@
 <template>
 
   <div v-loading="loading" class="app-contaniner">
-    <h4>服务端资源消耗实时显示</h4>
+    <h4>服务端 {{ serverName }} 资源消耗实时显示</h4>
     <div id="percent" :style="{height:height,width:width}" />
     <el-divider />
     <div id="area" :style="{height:height,width:width}" />
@@ -10,8 +10,9 @@
 
 <script>
 import echarts from 'echarts'
-import resize from './mixins/resize'
+import resize from './resize'
 import { parseTime } from '@/utils/index'
+import { getConfigVal } from '@/api/server'
 export default {
   mixins: [resize],
   props: {
@@ -26,6 +27,10 @@ export default {
     serverId: {
       type: String,
       default: ''
+    },
+    serverName: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -33,7 +38,8 @@ export default {
       percentChart: null,
       areaChart: null,
       rWebsocket: null,
-      loading: true
+      loading: true,
+      wsHost: ''
     }
   },
   mounted() {
@@ -55,11 +61,17 @@ export default {
     }
   },
   methods: {
+    async initParam() {
+      await getConfigVal({ name: 'websocket_host' }).then(Response => {
+        this.wsHost = Response.data.config_val
+      })
+    },
     initChart() {
       this.percentChart = echarts.init(document.getElementById('percent'))
       this.areaChart = echarts.init(document.getElementById('area'))
     },
-    initWebsocket() {
+    async initWebsocket() {
+      await this.initParam()
       if (typeof (WebSocket) === 'undefined') {
         this.$message({
           message: '您的浏览器不支持该功能',
@@ -67,7 +79,7 @@ export default {
         })
         return
       }
-      this.rWebsocket = new WebSocket(process.env.VUE_APP_RESOURCE_WEBSOCKET_PATH + '?id=' + this.serverId)
+      this.rWebsocket = new WebSocket(`ws://${this.wsHost}/server/resources/listen?id=${this.serverId}`)
       const data = { cpuUsedPercent: [], memoryUsedPercent: [], memoryUsed: [] }
       this.rWebsocket.onmessage = (e) => {
         const now = parseTime(new Date(), '{y}/{m}/{d} {h}:{i}:{s}')
