@@ -63,3 +63,11 @@ export function getConfigVal(params) {
     params
   })
 }
+
+export function delTmpFlie(params) {
+  return request({
+    url: '/api/v1/tmp/files',
+    method: 'POST',
+    params
+  })
+}

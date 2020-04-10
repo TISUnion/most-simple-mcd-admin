@@ -21,3 +21,11 @@ export function logout() {
     method: 'POST'
   })
 }
+
+export function updateUserData(data) {
+  return request({
+    url: '/api/v1/user/account',
+    method: 'POST',
+    data
+  })
+}

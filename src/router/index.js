@@ -49,9 +49,9 @@ export const constantRoutes = [
     redirect: '/userinfo',
     children: [{
       path: 'userinfo',
-      name: '管理员信息',
+      name: '管理员',
       component: () => import('@/views/userinfo/index'),
-      meta: { title: '管理员信息', icon: 'user' }
+      meta: { title: '管理员', icon: 'user' }
     }, {
       path: 'config',
       name: '配置管理',
@@ -71,9 +71,9 @@ export const constantRoutes = [
       hidden: true
     }, {
       path: 'resource/list',
-      name: '服务端moni列表',
+      name: '服务端moni',
       component: () => import('@/views/resource/list'),
-      meta: { title: '服务端moni列表', icon: 'dashboard' }
+      meta: { title: '服务端moni', icon: 'dashboard' }
     }, {
       path: 'resource/moni/:id/:name',
       name: '服务端moni实时面板',
