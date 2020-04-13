@@ -53,7 +53,7 @@
       </el-table-column>
       <el-table-column v-if="showIsMirror" align="center" label="是否是镜像服务器" width="150">
         <template slot-scope="{row}">
-          <span>{{ row.is_mirror }}</span>
+          <span>{{ row.is_mirror ? "是" : "否" }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="showMemory" align="center" label="使用内存大小">

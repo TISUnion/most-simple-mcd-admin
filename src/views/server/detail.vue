@@ -135,7 +135,9 @@
       <span>实时命令交互</span>
       <el-button class="panel-title-btn" type="success" size="medium" @click="handlePanel">{{ panelSwitch | getPanelSwitch }}</el-button>
       <el-button class="panel-title-btn" type="warning" size="medium" @click="resetPanel">清空</el-button>
-      <div ref="panel" class="interact-panel" />
+      <div ref="panel" class="interact-panel">
+        <div v-for="(msg, index) in panelMessage" :key="index" v-html="msg" />
+      </div>
       <el-input v-model="command" :disabled="!panelSwitch" placeholder="" class="edit-input" size="medium" @keyup.enter.native="runCommand" />
     </template>
   </div>
@@ -173,7 +175,9 @@ export default {
       loading: true,
       command: '',
       panelSwitch: false,
-      panelWebsocket: null
+      panelWebsocket: null,
+      pluginsInfo: [],
+      panelMessage: []
     }
   },
   created() {
@@ -261,13 +265,14 @@ export default {
       this.panelSwitch = false
     },
     addMsgToPanel(msg) {
-      const newSpanContent = document.createElement('div')
-      newSpanContent.appendChild(document.createTextNode(msg))
-      this.$refs.panel.appendChild(newSpanContent)
-      this.$refs.panel.scrollTop = this.$refs.panel.scrollHeight
+      msg = msg.replace(/\\n/gm, '<br/>')
+      this.panelMessage.push(msg)
+      this.$nextTick(function() {
+        this.$refs.panel.scrollTop = this.$refs.panel.scrollHeight
+      })
     },
     resetPanel() {
-      this.$refs.panel.innerHTML = ''
+      this.panelMessage = []
     }
   }
 }
