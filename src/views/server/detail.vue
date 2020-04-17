@@ -115,6 +115,12 @@
                   <span>{{ row.description }}</span>
                 </template>
               </el-table-column>
+              <el-table-column align="center" label="操作">
+                <template slot-scope="{row}">
+                  <el-button v-if="!row.is_ban" size="mini" type="danger" @click="handlePlugin(row, 2)"> 禁止 </el-button>
+                  <el-button v-else size="mini" type="success" @click="handlePlugin(row, 1)"> 解禁 </el-button>
+                </template>
+              </el-table-column>
             </el-table>
           </div>
         </el-col>
@@ -144,7 +150,7 @@
 </template>
 
 <script>
-import { getServerDetail } from '@/api/server'
+import { getServerDetail, operatePlugin } from '@/api/server'
 
 const Base64 = require('js-base64').Base64
 
@@ -273,6 +279,23 @@ export default {
     },
     resetPanel() {
       this.panelMessage = []
+    },
+    handlePlugin(row, operateType) {
+      if (this.detail.state !== 1) {
+        this.$message({
+          message: '服务器未启动',
+          type: 'error'
+        })
+        return
+      }
+      const operateTypeStr = { '1': '解禁', '2': '禁止' }
+      operatePlugin({ server_id: this.id, plugin_id: [row.id], operate_type: operateType }).then(() => {
+        this.$message({
+          message: `${operateTypeStr[operateType]}插件${row.name}成功`,
+          type: 'success'
+        })
+        this.getDetail()
+      })
     }
   }
 }
