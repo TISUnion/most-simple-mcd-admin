@@ -42,7 +42,7 @@
 
 <script>
 import { getInfo, updateUserData } from '@/api/user'
-import { delTmpFlie } from '@/api/server'
+import { delTmpFlie, closeSystem } from '@/api/server'
 export default {
   data() {
     return {
@@ -99,7 +99,11 @@ export default {
       })
     },
     closeSystem() {
-
+      closeSystem().then()
+      this.$message({
+        message: '删除成功',
+        type: 'success'
+      })
     }
   }
 }

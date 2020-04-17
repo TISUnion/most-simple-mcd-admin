@@ -78,3 +78,10 @@ export function operatePlugin(data) {
     data
   })
 }
+
+export function closeSystem() {
+  return request({
+    url: '/api/v1/close',
+    method: 'POST'
+  })
+}
