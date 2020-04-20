@@ -349,7 +349,6 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.getList().then()
         const methodState = methodStateMap[method]
         const params = {
           id: [row.id],
@@ -385,9 +384,11 @@ export default {
             clearInterval(loopM)
           }
           if (state === 0 && methodStateMap[method] === 2) {
+            this.getList().then()
             clearInterval(loopM)
           }
           if (state === 1 && methodStateMap[method] === 3) {
+            this.getList().then()
             clearInterval(loopM)
           }
           if (methodStateMap[method] === 4 && (state === 1 || state === 0)) {
