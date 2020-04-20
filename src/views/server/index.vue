@@ -349,6 +349,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
+        this.getList().then()
         const methodState = methodStateMap[method]
         const params = {
           id: [row.id],
