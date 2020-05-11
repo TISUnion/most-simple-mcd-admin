@@ -47,11 +47,10 @@ module.exports = {
         changeOrigin: true, // target是域名的话，需要这个参数，
         secure: false // 设置支持https协议的代理
       },
-      '/server/*': {
-        target: 'ws://localhost/',
+      '/most.simple.mcd.User/*': {
+        target: 'http://localhost/',
         changeOrigin: true, // target是域名的话，需要这个参数，
-        secure: false, // 设置支持https协议的代理
-        ws: true
+        secure: false // 设置支持https协议的代理
       }
     }
     // before: require('./mock/mock-server.js')

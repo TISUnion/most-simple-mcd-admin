@@ -2,30 +2,30 @@ import request from '@/utils/request'
 
 export function login(data) {
   return request({
-    url: '/user/login',
-    method: 'POST',
+    url: '/most.simple.mcd.User/login',
+    method: 'GRPC',
     data
   })
 }
 
 export function getInfo() {
   return request({
-    url: '/api/v1/user/info',
-    method: 'GET'
+    url: '/most.simple.mcd.User/info',
+    method: 'GRPC'
   })
 }
 
 export function logout() {
   return request({
-    url: '/user/logout',
-    method: 'POST'
+    url: '/most.simple.mcd.User/logout',
+    method: 'GRPC'
   })
 }
 
 export function updateUserData(data) {
   return request({
-    url: '/api/v1/user/account',
-    method: 'POST',
+    url: '/most.simple.mcd.User/update',
+    method: 'GRPC',
     data
   })
 }
