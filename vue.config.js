@@ -37,17 +37,7 @@ module.exports = {
       errors: true
     },
     proxy: {
-      '/user/*': {
-        target: 'http://localhost/',
-        changeOrigin: true, // target是域名的话，需要这个参数，
-        secure: false // 设置支持https协议的代理
-      },
-      '/api/v1/*': {
-        target: 'http://localhost/',
-        changeOrigin: true, // target是域名的话，需要这个参数，
-        secure: false // 设置支持https协议的代理
-      },
-      '/most.simple.mcd.User/*': {
+      '/*': {
         target: 'http://localhost/',
         changeOrigin: true, // target是域名的话，需要这个参数，
         secure: false // 设置支持https协议的代理

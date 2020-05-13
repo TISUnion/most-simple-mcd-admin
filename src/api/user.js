@@ -3,7 +3,7 @@ import request from '@/utils/request'
 export function login(data) {
   return request({
     url: '/most.simple.mcd.User/login',
-    method: 'GRPC',
+    method: 'POST',
     data
   })
 }
@@ -11,21 +11,23 @@ export function login(data) {
 export function getInfo() {
   return request({
     url: '/most.simple.mcd.User/info',
-    method: 'GRPC'
+    method: 'POST',
+    data: {}
   })
 }
 
 export function logout() {
   return request({
     url: '/most.simple.mcd.User/logout',
-    method: 'GRPC'
+    method: 'POST',
+    data: {}
   })
 }
 
 export function updateUserData(data) {
   return request({
     url: '/most.simple.mcd.User/update',
-    method: 'GRPC',
+    method: 'POST',
     data
   })
 }

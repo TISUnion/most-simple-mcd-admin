@@ -2,22 +2,22 @@ import request from '@/utils/request'
 
 export function getList() {
   return request({
-    url: '/api/v1/server/list',
-    method: 'GET'
+    url: '/most.simple.mcd.McServer/list',
+    method: 'POST'
   })
 }
 
-export function pingServer(params) {
+export function pingServer(data) {
   return request({
-    url: '/api/v1/server/ping',
-    method: 'GET',
-    params
+    url: '/most.simple.mcd.McServer/getServerState',
+    method: 'POST',
+    data
   })
 }
 
 export function operateServer(data) {
   return request({
-    url: '/api/v1/server',
+    url: '/most.simple.mcd.McServer/operateServer',
     method: 'POST',
     data
   })
@@ -25,24 +25,24 @@ export function operateServer(data) {
 
 export function downloadLog(params) {
   return request({
-    url: '/api/v1/log/download',
+    url: '/most.simple.mcd.Admin/getLog',
     method: 'GET',
     params,
     responseType: 'blob'
   })
 }
 
-export function getServerDetail(params) {
+export function getServerDetail(data) {
   return request({
-    url: '/api/v1/server/detail',
-    method: 'GET',
-    params
+    url: '/most.simple.mcd.McServer/detail',
+    method: 'POST',
+    data
   })
 }
 
 export function updateServerInfo(data) {
   return request({
-    url: '/api/v1/server/info',
+    url: '/most.simple.mcd.McServer/updateServerInfo',
     method: 'POST',
     data
   })
@@ -50,30 +50,30 @@ export function updateServerInfo(data) {
 
 export function uploadServer(data) {
   return request({
-    url: '/api/v1/upload/server',
+    url: '/most.simple.mcd.Admin/addUpToContainer',
     method: 'POST',
     data
   })
 }
 
-export function getConfigVal(params) {
+export function getConfigVal(data) {
   return request({
-    url: '/api/v1/config/val',
-    method: 'GET',
-    params
+    url: '/most.simple.mcd.Admin/getConfigVal',
+    method: 'POST',
+    data
   })
 }
 
 export function delTmpFlie() {
   return request({
-    url: '/api/v1/tmp/files',
+    url: '/most.simple.mcd.Admin/delTmpFlie',
     method: 'POST'
   })
 }
 
 export function operatePlugin(data) {
   return request({
-    url: '/api/v1/plugin',
+    url: '/most.simple.mcd.Admin/operatePlugin',
     method: 'POST',
     data
   })
@@ -81,7 +81,7 @@ export function operatePlugin(data) {
 
 export function closeSystem() {
   return request({
-    url: '/api/v1/close',
+    url: '/most.simple.mcd.Admin/closeMcd',
     method: 'POST'
   })
 }

@@ -2,14 +2,14 @@ import request from '@/utils/request'
 
 export function getList() {
   return request({
-    url: '/api/v1/config/list',
+    url: '/most.simple.mcd.Admin/getConfig',
     method: 'GET'
   })
 }
 
 export function updateConfig(data) {
   return request({
-    url: '/api/v1/config',
+    url: '/most.simple.mcd.Admin/updateConfig',
     method: 'POST',
     data
   })
