@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function login(data) {
   return request({
-    url: '/user/login',
+    url: '/most.simple.mcd.User/login',
     method: 'POST',
     data
   })
@@ -10,21 +10,23 @@ export function login(data) {
 
 export function getInfo() {
   return request({
-    url: '/api/v1/user/info',
-    method: 'GET'
+    url: '/most.simple.mcd.User/info',
+    method: 'POST',
+    data: {}
   })
 }
 
 export function logout() {
   return request({
-    url: '/user/logout',
-    method: 'POST'
+    url: '/most.simple.mcd.User/logout',
+    method: 'POST',
+    data: {}
   })
 }
 
 export function updateUserData(data) {
   return request({
-    url: '/api/v1/user/account',
+    url: '/most.simple.mcd.User/update',
     method: 'POST',
     data
   })
