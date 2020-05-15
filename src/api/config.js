@@ -3,7 +3,7 @@ import request from '@/utils/request'
 export function getList() {
   return request({
     url: '/most.simple.mcd.Admin/getConfig',
-    method: 'GET'
+    method: 'POST'
   })
 }
 

@@ -282,7 +282,7 @@ export default {
   methods: {
     async getList() {
       await getList().then(Response => {
-        const items = Response.data
+        const items = Response.data.list
         // 如果是正在启动，就循环获取状态
         items.map((v, k) => {
           if (v.state !== 0 && v.state !== 1) {

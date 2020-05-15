@@ -96,7 +96,7 @@ export default {
   methods: {
     async getList() {
       await getList().then(response => {
-        const items = response.data
+        const items = response.data.list
         this.list = items.map(v => {
           v.origin_config_val = v.config_val
           v.origin_description = v.description
@@ -127,11 +127,13 @@ export default {
         }
         row.origin_config_val = row.config_val
         row.origin_description = row.description
-        const params = [{
-          config_key: row.config_key,
-          config_val: row.config_val,
-          description: row.description
-        }]
+        const params = {
+          list: [{
+            config_key: row.config_key,
+            config_val: row.config_val,
+            description: row.description
+          }]
+        }
         updateConfig(params).then(() => {
           row.level = 4
           this.$message({
