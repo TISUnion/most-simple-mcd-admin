@@ -39,7 +39,7 @@ export default {
   },
   created() {
     getList().then(Response => {
-      this.tableData = Response.data
+      this.tableData = Response.data.list
       this.loading = false
     })
   }

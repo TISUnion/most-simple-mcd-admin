@@ -198,9 +198,11 @@ export default {
   methods: {
     getDetail() {
       getServerDetail({ id: this.id }).then(Response => {
-        const { server_info, plugin_info } = Response.data
-        this.detail = server_info
-        this.pluginsInfo = plugin_info
+        if (Response.data.state === undefined) {
+          Response.data.state = 0
+        }
+        this.detail = Response.data
+        this.pluginsInfo = Response.data.plugin_info
         this.loading = false
       })
     },

@@ -285,6 +285,10 @@ export default {
         const items = Response.data.list
         // 如果是正在启动，就循环获取状态
         items.map((v, k) => {
+          // 后端
+          if (v.state === undefined) {
+            v.state = 0
+          }
           if (v.state !== 0 && v.state !== 1) {
             this.loopGetRunResult(v, 'unknow')
           }
@@ -376,7 +380,10 @@ export default {
       const params = { id: row.id }
       var loopM = setInterval(() => {
         pingServer(params).then(Response => {
-          const { state } = Response.data
+          let state = Response.data.state
+          if (state === undefined) {
+            state = 0
+          }
           row.state = state
           // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
           if (state === 1 && methodStateMap[method] === 1) {
