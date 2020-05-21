@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { getServerDetail, operatePlugin } from '@/api/server'
+import { getServerDetail, operatePlugin, getConfigVal } from '@/api/server'
 
 const Base64 = require('js-base64').Base64
 
@@ -183,7 +183,8 @@ export default {
       panelSwitch: false,
       panelWebsocket: null,
       pluginsInfo: [],
-      panelMessage: []
+      panelMessage: [],
+      wsHost: ''
     }
   },
   created() {
@@ -196,6 +197,11 @@ export default {
     }
   },
   methods: {
+    async initParam() {
+      await getConfigVal({ name: 'websocket_host' }).then(Response => {
+        this.wsHost = Response.data.config_val
+      })
+    },
     getDetail() {
       getServerDetail({ id: this.id }).then(Response => {
         if (Response.data.state === undefined) {
@@ -246,7 +252,8 @@ export default {
       if (this.panelSwitch) {
         return
       }
-      this.panelWebsocket = new WebSocket(process.env.VUE_APP_WEBSOCKET_PATH + '?id=' + this.id)
+      const wsUrl = `ws://${this.wsHost}/most.simple.mcd.McServer/serverInteraction?id=${this.id}`
+      this.panelWebsocket = new WebSocket(wsUrl)
       this.panelWebsocket.onmessage = (e) => {
         const redata = JSON.parse(e.data)
         this.addMsgToPanel(Base64.decode(redata.origin_data))
