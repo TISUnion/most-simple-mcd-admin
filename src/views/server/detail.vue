@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { getServerDetail, operatePlugin, getConfigVal } from '@/api/server'
+import { getServerDetail, operatePlugin, getConfigVal, pingServer } from '@/api/server'
 
 const Base64 = require('js-base64').Base64
 
@@ -159,6 +159,14 @@ const stateMap = {
   '1': '运行中',
   '-1': '正在启动',
   '-2': '正在关闭'
+}
+
+// 1. 启动  2. 停止  3.重启 4.未知
+const methodStateMap = {
+  start: 1,
+  stop: 2,
+  restart: 3,
+  unknow: 4
 }
 export default {
   filters: {
@@ -190,6 +198,9 @@ export default {
   created() {
     this.id = this.$route.params.id
     this.getDetail()
+    if (this.detail.state !== 0 && this.detail.state !== 1) {
+      this.loopGetRunResult(this.detail, 'unknow')
+    }
   },
   destroyed() {
     if (this.panelSwitch) {
@@ -202,8 +213,8 @@ export default {
         this.wsHost = Response.data.config_val
       })
     },
-    getDetail() {
-      getServerDetail({ id: this.id }).then(Response => {
+    async getDetail() {
+      await getServerDetail({ id: this.id }).then(Response => {
         if (Response.data.state === undefined) {
           Response.data.state = 0
         }
@@ -234,7 +245,7 @@ export default {
         this.stopPanel()
       }
     },
-    startPanel() {
+    async startPanel() {
       if (typeof (WebSocket) === 'undefined') {
         this.$message({
           message: '您的浏览器不支持该功能',
@@ -252,6 +263,7 @@ export default {
       if (this.panelSwitch) {
         return
       }
+      await this.initParam()
       const wsUrl = `ws://${this.wsHost}/most.simple.mcd.McServer/serverInteraction?id=${this.id}`
       this.panelWebsocket = new WebSocket(wsUrl)
       this.panelWebsocket.onmessage = (e) => {
@@ -305,6 +317,35 @@ export default {
         })
         this.getDetail()
       })
+    },
+    loopGetRunResult(row, method) {
+      const params = { id: this.id }
+      var loopM = setInterval(() => {
+        pingServer(params).then(Response => {
+          let state = Response.data.state
+          if (state === undefined) {
+            state = 0
+          }
+          row.state = state
+          // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
+          if (state === 1 && methodStateMap[method] === 1) {
+            this.getDetail().then()
+            clearInterval(loopM)
+          }
+          if (state === 0 && methodStateMap[method] === 2) {
+            this.getDetail().then()
+            clearInterval(loopM)
+          }
+          if (state === 1 && methodStateMap[method] === 3) {
+            this.getDetail().then()
+            clearInterval(loopM)
+          }
+          if (methodStateMap[method] === 4 && (state === 1 || state === 0)) {
+            this.getDetail()
+            clearInterval(loopM)
+          }
+        })
+      }, 1000)
     }
   }
 }

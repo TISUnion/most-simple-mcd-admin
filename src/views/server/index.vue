@@ -387,7 +387,7 @@ export default {
           row.state = state
           // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
           if (state === 1 && methodStateMap[method] === 1) {
-            this.getList()
+            this.getList().then()
             clearInterval(loopM)
           }
           if (state === 0 && methodStateMap[method] === 2) {
