@@ -282,17 +282,21 @@ export default {
   methods: {
     async getList() {
       await getList().then(Response => {
-        const items = Response.data.list
+        let items = Response.data.list
         // 如果是正在启动，就循环获取状态
-        items.map((v, k) => {
+        if (items) {
+          items.map((v, k) => {
           // 后端
-          if (v.state === undefined) {
-            v.state = 0
-          }
-          if (v.state !== 0 && v.state !== 1) {
-            this.loopGetRunResult(v, 'unknow')
-          }
-        })
+            if (v.state === undefined) {
+              v.state = 0
+            }
+            if (v.state !== 0 && v.state !== 1) {
+              this.loopGetRunResult(v, 'unknow')
+            }
+          })
+        } else {
+          items = []
+        }
         this.list = items
       })
       this.listLoading = false
