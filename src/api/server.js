@@ -85,3 +85,10 @@ export function closeSystem() {
     method: 'POST'
   })
 }
+
+export function getAllServerSide() {
+  return request({
+    url: '/most.simple.mcd.McServer/getServerSide',
+    method: 'GET'
+  })
+}

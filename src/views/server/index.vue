@@ -11,6 +11,9 @@
       <el-checkbox v-model="showPort" class="filter-item" style="margin-left:15px;">
         端口
       </el-checkbox>
+      <el-checkbox v-model="showSide" class="filter-item" style="margin-left:15px;">
+        服务端类型
+      </el-checkbox>
       <el-checkbox v-model="showRunPath" class="filter-item" style="margin-left:15px;">
         运行工作路径
       </el-checkbox>
@@ -33,7 +36,9 @@
     <el-table :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row>
       <el-table-column v-if="showId" align="center" label="id">
         <template slot-scope="{row}">
-          <span>{{ row.id | ellipsis }}</span>
+          <el-tooltip effect="dark" :content="row.id" placement="top-start">
+            <span>{{ row.id | ellipsis }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column v-if="showName" align="center" label="名称">
@@ -46,9 +51,16 @@
           <span>{{ row.port }}</span>
         </template>
       </el-table-column>
+      <el-table-column v-if="showPort" align="center" label="服务端类型">
+        <template slot-scope="{row}">
+          <span>{{ row.side }}</span>
+        </template>
+      </el-table-column>
       <el-table-column v-if="showRunPath" align="center" label="运行工作路径">
         <template slot-scope="{row}">
-          <span>{{ row.run_rath | ellipsis }}</span>
+          <el-tooltip effect="dark" :content="row.run_rath" placement="top-start">
+            <span>{{ row.run_rath | ellipsis }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column v-if="showIsMirror" align="center" label="是否是镜像服务器" width="150">
@@ -129,6 +141,15 @@
         <el-form-item label="版本">
           <el-input v-model="rowServerInfo.version" size="small" class="filter-item" placeholder="服务端版本" />
         </el-form-item>
+        <el-form-item label="端类型">
+          <el-select v-model="rowServerInfo.side" filterable placeholder="请选择">
+            <el-option
+              v-for="item in sides"
+              :key="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="游戏模式">
           <el-input v-model="rowServerInfo.game_type" size="small" class="filter-item" placeholder="服务端模式" />
         </el-form-item>
@@ -184,6 +205,15 @@
         <el-form-item label="内存">
           <el-input v-model="newServerInfo.memory" size="small" class="filter-item" placeholder="服务端使用内存" />
         </el-form-item>
+        <el-form-item label="端类型">
+          <el-select v-model="newServerInfo.side" filterable placeholder="请选择">
+            <el-option
+              v-for="item in sides"
+              :key="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="upFileFormVisible = false">
@@ -198,7 +228,7 @@
 </template>
 
 <script>
-import { getList, operateServer, pingServer, downloadLog, updateServerInfo, uploadServer } from '@/api/server'
+import { getList, operateServer, pingServer, downloadLog, updateServerInfo, uploadServer, getAllServerSide } from '@/api/server'
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -254,6 +284,7 @@ export default {
       showVersion: true,
       showModel: true,
       showState: true,
+      showSide: true,
       selectIp: '',
       tableKey: 0,
       list: null,
@@ -264,7 +295,8 @@ export default {
       rowServerInfo: null,
       newServerInfo: {},
       paramsForm: { params: [] },
-      mcFile: []
+      mcFile: [],
+      sides: []
     }
   },
   created() {
@@ -298,6 +330,10 @@ export default {
           items = []
         }
         this.list = items
+      })
+
+      await getAllServerSide().then(Response => {
+        this.sides = Response.data.serverSides
       })
       this.listLoading = false
     },
@@ -433,12 +469,15 @@ export default {
       form.append('name', this.newServerInfo.name)
       form.append('port', this.newServerInfo.port)
       form.append('memory', this.newServerInfo.memory)
+      form.append('side', this.newServerInfo.side)
       uploadServer(form).then(() => {
         this.$message({
           message: '上传成功成功',
           type: 'success'
         })
         this.getList()
+        this.$refs.upload.clearFiles()
+        this.newServerInfo = {}
       })
     }
   }
