@@ -487,6 +487,7 @@ export default {
       form.append('port', this.newServerInfo.port)
       form.append('memory', this.newServerInfo.memory)
       form.append('side', this.newServerInfo.side)
+      form.append('comment', this.newServerInfo.comment)
       uploadServer(form).then(() => {
         this.$message({
           message: '上传成功成功',
