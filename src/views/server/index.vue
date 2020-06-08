@@ -29,6 +29,9 @@
       <el-checkbox v-model="showModel" class="filter-item" style="margin-left:15px;">
         游戏模式
       </el-checkbox>
+      <el-checkbox v-model="showComment" class="filter-item" style="margin-left:15px;">
+        备注
+      </el-checkbox>
       <el-checkbox v-model="showState" class="filter-item" style="margin-left:15px;">
         当前状态
       </el-checkbox>
@@ -95,6 +98,13 @@
           <span>{{ row.game_type }}</span>
         </template>
       </el-table-column>
+      <el-table-column v-if="showComment" align="center" label="备注">
+        <template slot-scope="{row}">
+          <el-tooltip effect="dark" :content="row.comment" placement="top-start">
+            <span>{{ row.comment | ellipsis }}</span>
+          </el-tooltip>
+        </template>
+      </el-table-column>
       <el-table-column v-if="showState" align="center" label="当前状态">
         <template slot-scope="{row}">
           <el-tag :type="row.state | statusFilter">
@@ -152,6 +162,9 @@
         </el-form-item>
         <el-form-item label="游戏模式">
           <el-input v-model="rowServerInfo.game_type" size="small" class="filter-item" placeholder="服务端模式" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="rowServerInfo.comment" type="textarea" rows="2" placeholder="请输入备注" size="small" class="filter-item" />
         </el-form-item>
       </el-form>
       <el-divider><i class="el-icon-s-operation" />启动参数设置</el-divider>
@@ -213,6 +226,9 @@
               :value="item"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="newServerInfo.comment" type="textarea" rows="2" placeholder="请输入备注" size="small" class="filter-item" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -285,6 +301,7 @@ export default {
       showModel: true,
       showState: true,
       showSide: true,
+      showComment: true,
       selectIp: '',
       tableKey: 0,
       list: null,
