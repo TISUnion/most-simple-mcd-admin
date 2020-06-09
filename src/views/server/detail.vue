@@ -80,6 +80,16 @@
       </el-row>
       <el-row>
         <el-col :offset="1" :span="8">
+          <div class="grid-content bg-purple-light">备注：
+            <template v-if="edit">
+              <el-input v-model="detail.comment" class="edit-input" size="small" />
+            </template>
+            <span v-else>{{ detail.comment }}</span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :offset="1" :span="8">
           <div class="grid-content bg-purple-light">运行命令：
             <el-table ref="dragTable" :data="detail.cmd_str" row-key="id" border fit highlight-current-row style="width: 100%;margin-top:15px">
               <el-table-column align="center" label="命令参数">
