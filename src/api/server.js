@@ -26,7 +26,7 @@ export function operateServer(data) {
 export function downloadLog(params) {
   return request({
     url: '/most.simple.mcd.Admin/getLog',
-    method: 'GET',
+    method: 'POST',
     params,
     responseType: 'blob'
   })
