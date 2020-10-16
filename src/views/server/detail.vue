@@ -162,8 +162,6 @@
 <script>
 import { getServerDetail, operatePlugin, getConfigVal, pingServer } from '@/api/server'
 
-const Base64 = require('js-base64').Base64
-
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -278,7 +276,7 @@ export default {
       this.panelWebsocket = new WebSocket(wsUrl)
       this.panelWebsocket.onmessage = (e) => {
         const redata = JSON.parse(e.data)
-        this.addMsgToPanel(Base64.decode(redata.origin_data))
+        this.addMsgToPanel(redata.origin_data)
       }
       this.panelWebsocket.onopen = () => {
         this.panelWebsocket.send(this.$store.state.user.token) // 发送校验token

@@ -101,7 +101,7 @@ export default {
     closeSystem() {
       closeSystem().then()
       this.$message({
-        message: '删除成功',
+        message: '关闭成功',
         type: 'success'
       })
     }
