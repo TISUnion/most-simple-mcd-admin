@@ -79,7 +79,8 @@ export default {
         })
         return
       }
-      this.rWebsocket = new WebSocket(`ws://${this.wsHost}/server/resources/listen?id=${this.serverId}`)
+      const wsUrl = `ws://${this.wsHost}/most.simple.mcd.McServer/listenResource?id=${this.serverId}`
+      this.rWebsocket = new WebSocket(wsUrl)
       const data = { cpuUsedPercent: [], memoryUsedPercent: [], memoryUsed: [] }
       this.rWebsocket.onmessage = (e) => {
         const now = parseTime(new Date(), '{y}/{m}/{d} {h}:{i}:{s}')

@@ -11,6 +11,9 @@
       <el-checkbox v-model="showPort" class="filter-item" style="margin-left:15px;">
         端口
       </el-checkbox>
+      <el-checkbox v-model="showSide" class="filter-item" style="margin-left:15px;">
+        服务端类型
+      </el-checkbox>
       <el-checkbox v-model="showRunPath" class="filter-item" style="margin-left:15px;">
         运行工作路径
       </el-checkbox>
@@ -26,6 +29,9 @@
       <el-checkbox v-model="showModel" class="filter-item" style="margin-left:15px;">
         游戏模式
       </el-checkbox>
+      <el-checkbox v-model="showComment" class="filter-item" style="margin-left:15px;">
+        备注
+      </el-checkbox>
       <el-checkbox v-model="showState" class="filter-item" style="margin-left:15px;">
         当前状态
       </el-checkbox>
@@ -33,7 +39,9 @@
     <el-table :key="tableKey" v-loading="listLoading" :data="list" border fit highlight-current-row>
       <el-table-column v-if="showId" align="center" label="id">
         <template slot-scope="{row}">
-          <span>{{ row.id | ellipsis }}</span>
+          <el-tooltip effect="dark" :content="row.id" placement="top-start">
+            <span>{{ row.id | ellipsis }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column v-if="showName" align="center" label="名称">
@@ -46,9 +54,16 @@
           <span>{{ row.port }}</span>
         </template>
       </el-table-column>
+      <el-table-column v-if="showPort" align="center" label="服务端类型">
+        <template slot-scope="{row}">
+          <span>{{ row.side }}</span>
+        </template>
+      </el-table-column>
       <el-table-column v-if="showRunPath" align="center" label="运行工作路径">
         <template slot-scope="{row}">
-          <span>{{ row.run_rath | ellipsis }}</span>
+          <el-tooltip effect="dark" :content="row.run_rath" placement="top-start">
+            <span>{{ row.run_rath | ellipsis }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column v-if="showIsMirror" align="center" label="是否是镜像服务器" width="150">
@@ -81,6 +96,13 @@
       <el-table-column v-if="showModel" align="center" label="游戏模式">
         <template slot-scope="{row}">
           <span>{{ row.game_type }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="showComment" align="center" label="备注">
+        <template slot-scope="{row}">
+          <el-tooltip effect="dark" :content="row.comment" placement="top-start">
+            <span>{{ row.comment | ellipsis }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column v-if="showState" align="center" label="当前状态">
@@ -129,8 +151,20 @@
         <el-form-item label="版本">
           <el-input v-model="rowServerInfo.version" size="small" class="filter-item" placeholder="服务端版本" />
         </el-form-item>
+        <el-form-item label="端类型">
+          <el-select v-model="rowServerInfo.side" filterable placeholder="请选择">
+            <el-option
+              v-for="item in sides"
+              :key="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="游戏模式">
           <el-input v-model="rowServerInfo.game_type" size="small" class="filter-item" placeholder="服务端模式" />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="rowServerInfo.comment" type="textarea" rows="2" placeholder="请输入备注" size="small" class="filter-item" />
         </el-form-item>
       </el-form>
       <el-divider><i class="el-icon-s-operation" />启动参数设置</el-divider>
@@ -184,6 +218,18 @@
         <el-form-item label="内存">
           <el-input v-model="newServerInfo.memory" size="small" class="filter-item" placeholder="服务端使用内存" />
         </el-form-item>
+        <el-form-item label="端类型">
+          <el-select v-model="newServerInfo.side" filterable placeholder="请选择">
+            <el-option
+              v-for="item in sides"
+              :key="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="newServerInfo.comment" type="textarea" rows="2" placeholder="请输入备注" size="small" class="filter-item" />
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="upFileFormVisible = false">
@@ -198,7 +244,7 @@
 </template>
 
 <script>
-import { getList, operateServer, pingServer, downloadLog, updateServerInfo, uploadServer } from '@/api/server'
+import { getList, operateServer, pingServer, downloadLog, updateServerInfo, uploadServer, getAllServerSide } from '@/api/server'
 const stateMap = {
   '0': '停止',
   '1': '运行中',
@@ -254,6 +300,8 @@ export default {
       showVersion: true,
       showModel: true,
       showState: true,
+      showSide: true,
+      showComment: true,
       selectIp: '',
       tableKey: 0,
       list: null,
@@ -264,7 +312,8 @@ export default {
       rowServerInfo: null,
       newServerInfo: {},
       paramsForm: { params: [] },
-      mcFile: []
+      mcFile: [],
+      sides: []
     }
   },
   created() {
@@ -282,14 +331,26 @@ export default {
   methods: {
     async getList() {
       await getList().then(Response => {
-        const items = Response.data
+        let items = Response.data.list
         // 如果是正在启动，就循环获取状态
-        items.map((v, k) => {
-          if (v.state !== 0 && v.state !== 1) {
-            this.loopGetRunResult(v, 'unknow')
-          }
-        })
+        if (items) {
+          items.map((v, k) => {
+          // 后端
+            if (v.state === undefined) {
+              v.state = 0
+            }
+            if (v.state !== 0 && v.state !== 1) {
+              this.loopGetRunResult(v, 'unknow')
+            }
+          })
+        } else {
+          items = []
+        }
         this.list = items
+      })
+
+      await getAllServerSide().then(Response => {
+        this.sides = Response.data.serverSides
       })
       this.listLoading = false
     },
@@ -376,11 +437,14 @@ export default {
       const params = { id: row.id }
       var loopM = setInterval(() => {
         pingServer(params).then(Response => {
-          const { state } = Response.data
+          let state = Response.data.state
+          if (state === undefined) {
+            state = 0
+          }
           row.state = state
           // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
           if (state === 1 && methodStateMap[method] === 1) {
-            this.getList()
+            this.getList().then()
             clearInterval(loopM)
           }
           if (state === 0 && methodStateMap[method] === 2) {
@@ -422,12 +486,16 @@ export default {
       form.append('name', this.newServerInfo.name)
       form.append('port', this.newServerInfo.port)
       form.append('memory', this.newServerInfo.memory)
+      form.append('side', this.newServerInfo.side)
+      form.append('comment', this.newServerInfo.comment)
       uploadServer(form).then(() => {
         this.$message({
           message: '上传成功成功',
           type: 'success'
         })
         this.getList()
+        this.$refs.upload.clearFiles()
+        this.newServerInfo = {}
       })
     }
   }

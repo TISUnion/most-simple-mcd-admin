@@ -80,6 +80,16 @@
       </el-row>
       <el-row>
         <el-col :offset="1" :span="8">
+          <div class="grid-content bg-purple-light">备注：
+            <template v-if="edit">
+              <el-input v-model="detail.comment" class="edit-input" size="small" />
+            </template>
+            <span v-else>{{ detail.comment }}</span>
+          </div>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :offset="1" :span="8">
           <div class="grid-content bg-purple-light">运行命令：
             <el-table ref="dragTable" :data="detail.cmd_str" row-key="id" border fit highlight-current-row style="width: 100%;margin-top:15px">
               <el-table-column align="center" label="命令参数">
@@ -150,15 +160,21 @@
 </template>
 
 <script>
-import { getServerDetail, operatePlugin } from '@/api/server'
-
-const Base64 = require('js-base64').Base64
+import { getServerDetail, operatePlugin, getConfigVal, pingServer } from '@/api/server'
 
 const stateMap = {
   '0': '停止',
   '1': '运行中',
   '-1': '正在启动',
   '-2': '正在关闭'
+}
+
+// 1. 启动  2. 停止  3.重启 4.未知
+const methodStateMap = {
+  start: 1,
+  stop: 2,
+  restart: 3,
+  unknow: 4
 }
 export default {
   filters: {
@@ -183,12 +199,16 @@ export default {
       panelSwitch: false,
       panelWebsocket: null,
       pluginsInfo: [],
-      panelMessage: []
+      panelMessage: [],
+      wsHost: ''
     }
   },
   created() {
     this.id = this.$route.params.id
     this.getDetail()
+    if (this.detail.state !== 0 && this.detail.state !== 1) {
+      this.loopGetRunResult(this.detail, 'unknow')
+    }
   },
   destroyed() {
     if (this.panelSwitch) {
@@ -196,11 +216,18 @@ export default {
     }
   },
   methods: {
-    getDetail() {
-      getServerDetail({ id: this.id }).then(Response => {
-        const { server_info, plugin_info } = Response.data
-        this.detail = server_info
-        this.pluginsInfo = plugin_info
+    async initParam() {
+      await getConfigVal({ name: 'websocket_host' }).then(Response => {
+        this.wsHost = Response.data.config_val
+      })
+    },
+    async getDetail() {
+      await getServerDetail({ id: this.id }).then(Response => {
+        if (Response.data.state === undefined) {
+          Response.data.state = 0
+        }
+        this.detail = Response.data
+        this.pluginsInfo = Response.data.plugin_info
         this.loading = false
       })
     },
@@ -226,7 +253,7 @@ export default {
         this.stopPanel()
       }
     },
-    startPanel() {
+    async startPanel() {
       if (typeof (WebSocket) === 'undefined') {
         this.$message({
           message: '您的浏览器不支持该功能',
@@ -244,10 +271,12 @@ export default {
       if (this.panelSwitch) {
         return
       }
-      this.panelWebsocket = new WebSocket(process.env.VUE_APP_WEBSOCKET_PATH + '?id=' + this.id)
+      await this.initParam()
+      const wsUrl = `ws://${this.wsHost}/most.simple.mcd.McServer/serverInteraction?id=${this.id}`
+      this.panelWebsocket = new WebSocket(wsUrl)
       this.panelWebsocket.onmessage = (e) => {
         const redata = JSON.parse(e.data)
-        this.addMsgToPanel(Base64.decode(redata.origin_data))
+        this.addMsgToPanel(redata.origin_data)
       }
       this.panelWebsocket.onopen = () => {
         this.panelWebsocket.send(this.$store.state.user.token) // 发送校验token
@@ -296,6 +325,35 @@ export default {
         })
         this.getDetail()
       })
+    },
+    loopGetRunResult(row, method) {
+      const params = { id: this.id }
+      var loopM = setInterval(() => {
+        pingServer(params).then(Response => {
+          let state = Response.data.state
+          if (state === undefined) {
+            state = 0
+          }
+          row.state = state
+          // 0.未启动 1.启动  -1.正在启动 -2.正在关闭
+          if (state === 1 && methodStateMap[method] === 1) {
+            this.getDetail().then()
+            clearInterval(loopM)
+          }
+          if (state === 0 && methodStateMap[method] === 2) {
+            this.getDetail().then()
+            clearInterval(loopM)
+          }
+          if (state === 1 && methodStateMap[method] === 3) {
+            this.getDetail().then()
+            clearInterval(loopM)
+          }
+          if (methodStateMap[method] === 4 && (state === 1 || state === 0)) {
+            this.getDetail()
+            clearInterval(loopM)
+          }
+        })
+      }, 1000)
     }
   }
 }
