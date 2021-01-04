@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-button type="primary" class="filter-item" style="margin-left:15px;" size="small" @click="upFileFormVisible = true">上传服务端<i class="el-icon-upload el-icon--right" /></el-button>
+      <el-button type="primary" class="filter-item" style="margin-left:15px;" size="small" @click="upServerFileFormVisible = true">上传服务端<i class="el-icon-upload el-icon--right" /></el-button>
       <el-checkbox v-model="showId" disabled class="filter-item" style="margin-left:15px;">
         id
       </el-checkbox>
@@ -131,6 +131,7 @@
               详情
             </el-button>
           </router-link>
+          <el-button size="mini" type="warning" @click="upMapFileFormVisible = true">上传地图</el-button>
           <el-button size="mini" type="success" @click="downloadLog(row)">
             下载日志
           </el-button>
@@ -191,7 +192,7 @@
         </el-button>
       </div>
     </el-dialog>
-    <el-dialog title="上传服务端" :visible.sync="upFileFormVisible">
+    <el-dialog title="上传服务端" :visible.sync="upServerFileFormVisible">
       <el-form label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
         <el-form-item label="上传">
           <el-upload
@@ -232,11 +233,35 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="upFileFormVisible = false">
+        <el-button @click="upServerFileFormVisible = false">
           取消
         </el-button>
         <el-button type="primary" @click="newServer">
           提交
+        </el-button>
+      </div>
+    </el-dialog>
+    <el-dialog title="上传地图" :visible.sync="upMapFileFormVisible">
+      <el-upload
+        ref="upload"
+        class="upload-demo"
+        drag
+        :limit="1"
+        :auto-upload="false"
+        accept="zip"
+        action="url"
+        :http-request="uploadFile"
+      >
+        <i class="el-icon-upload" />
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div slot="tip" class="el-upload__tip">只能上传zip文件</div>
+      </el-upload>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="upMapFileFormVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" @click="uploadMap">
+          上传
         </el-button>
       </div>
     </el-dialog>
@@ -308,7 +333,8 @@ export default {
       total: 0,
       listLoading: true,
       dialogFormVisible: false,
-      upFileFormVisible: false,
+      upServerFileFormVisible: false,
+      upMapFileFormVisible: false,
       rowServerInfo: null,
       newServerInfo: {},
       paramsForm: { params: [] },
@@ -479,15 +505,15 @@ export default {
       this.mcFile = params
     },
     newServer() {
-      this.upFileFormVisible = false
+      this.upServerFileFormVisible = false
       this.$refs.upload.submit()
       const form = new FormData()
       form.append('file', this.mcFile.file)
-      form.append('name', this.newServerInfo.name)
-      form.append('port', this.newServerInfo.port)
-      form.append('memory', this.newServerInfo.memory)
-      form.append('side', this.newServerInfo.side)
-      form.append('comment', this.newServerInfo.comment)
+      form.append('name', !this.newServerInfo.name ? '' : this.newServerInfo.name)
+      form.append('port', !this.newServerInfo.port ? 25565 : this.newServerInfo.port)
+      form.append('memory', !this.newServerInfo.memory ? 1024 : this.newServerInfo.memory)
+      form.append('side', !this.newServerInfo.side ? 'vanilla' : this.newServerInfo.side)
+      form.append('comment', !this.newServerInfo.comment ? '' : this.newServerInfo.comment)
       uploadServer(form).then(() => {
         this.$message({
           message: '上传成功成功',
